@@ -1,9 +1,22 @@
 {
   "name": "@noction/vue-draggable-grid",
-  "version": "1.10.1",
   "type": "module",
+  "version": "1.10.1",
   "description": "Vue3 grid layout with resize, drag and responsive",
+  "author": {
+    "name": "Mihai Plamadeala",
+    "email": "plamadeala.mihai002@gmail.com"
+  },
+  "license": "MIT",
   "homepage": "https://noction.github.io/vue-draggable-grid/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Noction/draggable-grid.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Noction/draggable-grid/issues",
+    "email": "plamadeala.mihai002@gmail.com"
+  },
   "keywords": [
     "grid",
     "grid-layout",
@@ -15,25 +28,6 @@
     "composition-api",
     "typescript"
   ],
-  "author": {
-    "name": "Mihai Plamadeala",
-    "email": "plamadeala.mihai002@gmail.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Noction/draggable-grid.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Noction/draggable-grid/issues",
-    "email": "plamadeala.mihai002@gmail.com"
-  },
-  "files": [
-    "dist"
-  ],
-  "license": "MIT",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -42,9 +36,15 @@
     },
     "./styles": "./dist/style.css"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
-    "build:watch": "vite build --watch",
+    "build:watch": "vite build  --watch",
     "build": "cross-env NODE_ENV=production vite build && vue-tsc --declaration --emitDeclarationOnly",
     "preview": "vite preview",
     "lint:es": "eslint \"src/**/*.{js,ts,vue}\" --fix --color",
@@ -53,6 +53,9 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "vue-tsc --noEmit",
     "prepublishOnly": "pnpm build"
+  },
+  "peerDependencies": {
+    "vue": "^3.2.0"
   },
   "dependencies": {
     "@interactjs/actions": "^1.10.20",
@@ -63,9 +66,6 @@
     "@types/element-resize-detector": "^1.1.5",
     "element-resize-detector": "^1.2.4",
     "vue": "^3.4.14"
-  },
-  "peerDependencies": {
-    "vue": "^3.2.0"
   },
   "devDependencies": {
     "@babel/types": "^7.23.6",

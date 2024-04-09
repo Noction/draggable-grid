@@ -1,40 +1,23 @@
-<template>
-  <div
-    ref="item"
-    class="vue-grid-item"
-    :class="cssClasses"
-    :style="style.props"
-  >
-    <slot />
-    <div
-      v-if="isResizableAndNotStatic"
-      :class="RESIZABLE_HANDLE_CLASS"
-    >
-      <div class="corner-handle"/>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
-import type { CompleteMargins } from '@/types'
-import { getColsFromBreakpoint } from '@/helpers/responsiveUtils'
 import interact from '@interactjs/interactjs'
-import useGridProvider from '@/composables/useGridProvider'
-import { Dimensions, GridItemPosition, HTMLDivElementWithId } from '@/types/components'
-import type { GridItemEvents, GridItemProps } from '@/types/grid-item'
-import { INTERSECTION_OBSERVER_ID, RESIZABLE_HANDLE_CLASS } from '@/constants'
 import {
   computed,
   onBeforeUnmount,
   onMounted,
   reactive,
   ref,
-  watch
+  watch,
 } from 'vue'
+import type { CompleteMargins } from '@/types'
+import useGridProvider from '@/composables/useGridProvider'
+import type { Dimensions, GridItemPosition, HTMLDivElementWithId } from '@/types/components'
+import type { GridItemEvents, GridItemProps } from '@/types/grid-item'
+import { INTERSECTION_OBSERVER_ID, RESIZABLE_HANDLE_CLASS } from '@/constants'
 import { createCoreData, getControlPosition } from '@/helpers/draggableUtils'
 import { normalizeMargins, setTopLeft, setTransform, stringReplacer } from '@/helpers/utils'
 
+/* eslint perfectionist/sort-objects: "error" */
 const props = withDefaults(
   defineProps<GridItemProps>(),
   {
@@ -42,59 +25,58 @@ const props = withDefaults(
     dragIgnoreFrom: 'a, button',
     dragOption: () => ({}),
     isStatic: false,
-    maxH: Infinity,
-    maxW: Infinity,
+    maxH: Number.POSITIVE_INFINITY,
+    maxW: Number.POSITIVE_INFINITY,
     minH: 1,
     minW: 1,
-    observer: undefined
-  }
+    observer: undefined,
+  },
 )
 
 const emit = defineEmits<GridItemEvents>()
 
 const {
   handleDragEvent,
-  handleResizeEvent
+  handleResizeEvent,
 } = useGridProvider()
 
 const item = ref<HTMLDivElementWithId | null>(null)
 
 const dragEventSet = ref(false)
-const dragging = ref<{ left?: number; top?: number }>({})
+const dragging = ref<{ left?: number, top?: number }>({})
 const inner = ref<Dimensions>({ h: props.h, w: props.w, x: props.x, y: props.y })
 
-// eslint-disable-next-line
 const interactObj = ref<any>(null)
 const isDragging = ref(false)
 const isResizing = ref(false)
-const lastInner = ref<Dimensions>({ h: NaN, w: NaN, x: NaN, y: NaN })
-const previousInner = ref<Dimensions>({ h: NaN, w: NaN, x: NaN, y: NaN })
+const lastInner = ref<Dimensions>({ h: Number.NaN, w: Number.NaN, x: Number.NaN, y: Number.NaN })
+const previousInner = ref<Dimensions>({ h: Number.NaN, w: Number.NaN, x: Number.NaN, y: Number.NaN })
 const resizeEventSet = ref(false)
-const resizing = ref<{ height: number; width: number } | null>(null)
+const resizing = ref<{ height: number, width: number } | null>(null)
 const style: { props: CSSProperties } = reactive({ props: {} })
+
+const isNoTouch = computed(() => {
+  const isDraggableOrResizable = props.isDraggable || props.isResizable
+  const isAndroid = navigator.userAgent
+    .toLowerCase()
+    .includes('android')
+
+  return isAndroid && isDraggableOrResizable && !props.isStatic
+})
+
+const isResizableAndNotStatic = computed(() => props.isResizable && !props.isStatic)
 
 const cssClasses = computed(() => {
   return {
     'css-transforms': props.useCssTransforms,
     'disable-user-select': isDragging.value,
     'no-touch': isNoTouch.value,
-    resizing: isResizing.value,
-    static: props.isStatic,
+    'resizing': isResizing.value,
+    'static': props.isStatic,
     'vue-draggable-dragging': isDragging.value,
-    'vue-resizable': isResizableAndNotStatic.value
+    'vue-resizable': isResizableAndNotStatic.value,
   } as const
 })
-
-const isNoTouch = computed(() => {
-  const isDraggableOrResizable = props.isDraggable || props.isResizable
-  const isAndroid = navigator.userAgent
-    .toLowerCase()
-    .indexOf('android') !== -1
-
-  return isAndroid && isDraggableOrResizable && !props.isStatic
-})
-
-const isResizableAndNotStatic = computed(() => props.isResizable && !props.isStatic)
 
 watch(() => props.observer, () => {
   if (props.observer && item.value) {
@@ -114,7 +96,7 @@ watch(() => props.containerWidth, () => {
   emitContainerResized()
 })
 
-watch(() => props.h, value => {
+watch(() => props.h, (value) => {
   inner.value.h = value
   emitContainerResized()
 })
@@ -128,7 +110,7 @@ watch([
   () => props.maxH,
   () => props.maxW,
   () => props.minH,
-  () => props.minW
+  () => props.minW,
 ], () => {
   tryMakeResizable()
 })
@@ -142,17 +124,17 @@ watch(() => props.isStatic, () => {
   tryMakeDraggable()
 })
 
-watch(() => props.w, value => {
+watch(() => props.w, (value) => {
   inner.value.w = value
   createStyle()
 })
 
-watch(() => props.x, value => {
+watch(() => props.x, (value) => {
   inner.value.x = value
   createStyle()
 })
 
-watch(() => props.y, value => {
+watch(() => props.y, (value) => {
   inner.value.y = value
   createStyle()
 })
@@ -161,21 +143,21 @@ watch(() => props.calculateStylesTrigger, () => {
   createStyle()
 })
 
-const calcColWidth = (): GridItemPosition['width'] => {
+function calcColWidth(): GridItemPosition['width'] {
   const [marginY] = normalizeMargins(props.margin)
 
   return (props.containerWidth - (marginY * (props.colNum + 1))) / props.colNum
 }
 
-const calcPosition = ({ x, y, w, h } : Dimensions): GridItemPosition => {
+function calcPosition({ h, w, x, y }: Dimensions): GridItemPosition {
   const colWidth = calcColWidth()
 
   const handleMargins = ([marginY, marginX]: CompleteMargins) => {
     return {
-      height: h === Infinity ? h : Math.round(props.rowHeight * h + Math.max(0, h - 1) * marginY),
+      height: h === Number.POSITIVE_INFINITY ? h : Math.round(props.rowHeight * h + Math.max(0, h - 1) * marginY),
       left: Math.floor(colWidth * x + (x + 1) * marginX),
       top: Math.round(props.rowHeight * y + (y + 1) * marginY),
-      width: w === Infinity ? w : Math.round(colWidth * w + Math.max(0, w - 1) * marginX)
+      width: w === Number.POSITIVE_INFINITY ? w : Math.round(colWidth * w + Math.max(0, w - 1) * marginX),
     }
   }
 
@@ -184,7 +166,7 @@ const calcPosition = ({ x, y, w, h } : Dimensions): GridItemPosition => {
   return handleMargins(margins)
 }
 
-const calcWH = (height: GridItemPosition['height'], width: GridItemPosition['width']): Pick<Dimensions, 'w' | 'h'> => {
+function calcWH(height: GridItemPosition['height'], width: GridItemPosition['width']): Pick<Dimensions, 'w' | 'h'> {
   const colWidth = calcColWidth()
   const [marginY, marginX] = normalizeMargins(props.margin)
 
@@ -193,11 +175,11 @@ const calcWH = (height: GridItemPosition['height'], width: GridItemPosition['wid
 
   return {
     h: Math.max(Math.min(h, props.maxRows - inner.value.y), 0),
-    w: Math.max(Math.min(w, props.colNum - inner.value.x), 0)
+    w: Math.max(Math.min(w, props.colNum - inner.value.x), 0),
   }
 }
 
-const calcXY = (top: GridItemPosition['top'], left: GridItemPosition['left']): Pick<Dimensions, 'x' | 'y'> => {
+function calcXY(top: GridItemPosition['top'], left: GridItemPosition['left']): Pick<Dimensions, 'x' | 'y'> {
   const colWidth = calcColWidth()
   const [marginY, marginX] = normalizeMargins(props.margin)
 
@@ -206,22 +188,23 @@ const calcXY = (top: GridItemPosition['top'], left: GridItemPosition['left']): P
 
   return {
     x: Math.max(Math.min(x, props.colNum - inner.value.w), 0),
-    y: Math.max(Math.min(y, props.maxRows - inner.value.h), 0)
+    y: Math.max(Math.min(y, props.maxRows - inner.value.h), 0),
   }
 }
 
-const createStyle = (): void => {
+function createStyle(): void {
   const pos = calcPosition({
     h: inner.value.h,
     w: inner.value.w,
     x: inner.value.x,
-    y: inner.value.y
+    y: inner.value.y,
   })
 
   if (props.x + props.w > props.colNum) {
     inner.value.x = 0
     inner.value.w = (props.w > props.colNum) ? props.colNum : props.w
-  } else {
+  }
+  else {
     inner.value.x = props.x
     inner.value.w = props.w
   }
@@ -232,11 +215,7 @@ const createStyle = (): void => {
   }
 
   if (isResizing.value) {
-    // eslint-disable-next-line
-    // @ts-ignore
     pos.width = resizing?.value?.width ?? 0
-    // eslint-disable-next-line
-    // @ts-ignore
     pos.height = resizing?.value?.height ?? 0
   }
 
@@ -244,38 +223,38 @@ const createStyle = (): void => {
     ? setTransform(pos.top, pos.left, pos.width, pos.height)
     : setTopLeft(pos.top, pos.left, pos.width, pos.height)
 }
-const emitContainerResized = () => {
+function emitContainerResized() {
   createStyle()
 
-  const styleProps = {} as { height: number; width: number }
+  const styleProps = {} as { height: number, width: number }
 
   for (const prop of ['width', 'height'] as const) {
     const val = style.props[prop]
-    // eslint-disable-next-line
-    // @ts-ignore
     const matches = val?.toString().match(/^(\d+)px$/)
 
-    if (!matches) return
+    if (!matches)
+      return
 
     styleProps[prop] = +matches[1]
   }
 
-  emit('noc-resize-container', {
+  emit('nocResizeContainer', {
     h: props.h,
     height: styleProps.height,
     id: props.id,
     w: props.w,
-    width: styleProps.width
+    width: styleProps.width,
   })
 }
 
-// eslint-disable-next-line
-const handleDrag = (event: any): void  => {
-  if (props.isStatic || isResizing.value) return
+function handleDrag(event: any): void {
+  if (props.isStatic || isResizing.value)
+    return
 
   const position = getControlPosition(event)
 
-  if (!position) return
+  if (!position)
+    return
 
   const { x, y } = position
 
@@ -297,7 +276,8 @@ const handleDrag = (event: any): void  => {
       break
     }
     case 'dragend': {
-      if (!isDragging.value) return
+      if (!isDragging.value)
+        return
       const parentRect = event.target.offsetParent.getBoundingClientRect()
       const clientRect = event.target.getBoundingClientRect()
 
@@ -325,18 +305,18 @@ const handleDrag = (event: any): void  => {
   lastInner.value.y = y
 
   if (inner.value.x !== pos.x || inner.value.y !== pos.y) {
-    emit('noc-move', {
+    emit('nocMove', {
       id: props.id,
       x: pos.x,
-      y: pos.y
+      y: pos.y,
     })
   }
 
   if (event.type === 'dragend' && (previousInner.value.x !== inner.value.x || previousInner.value.y !== inner.value.y)) {
-    emit('noc-move-end', {
+    emit('nocMoveEnd', {
       id: props.id,
       x: pos.x,
-      y: pos.y
+      y: pos.y,
     })
   }
 
@@ -347,17 +327,18 @@ const handleDrag = (event: any): void  => {
     id: props.id,
     w: inner.value.w,
     x: pos.x,
-    y: pos.y
+    y: pos.y,
   })
 }
 
-// eslint-disable-next-line
-const handleResize = (event: any): void => {
-  if (props.isStatic) return
+function handleResize(event: any): void {
+  if (props.isStatic)
+    return
 
   const position = getControlPosition(event)
 
-  if (!position) return
+  if (!position)
+    return
 
   const { x, y } = position
   const newSize = { height: 0, width: 0 }
@@ -371,7 +352,7 @@ const handleResize = (event: any): void => {
         h: inner.value.h,
         w: inner.value.w,
         x: inner.value.x,
-        y: inner.value.y
+        y: inner.value.y,
       })
 
       newSize.width = width
@@ -384,11 +365,7 @@ const handleResize = (event: any): void => {
     case 'resizemove': {
       const coreEvent = createCoreData(lastInner.value.x, lastInner.value.h, x, y)
 
-      // eslint-disable-next-line
-      // @ts-ignore
       newSize.width = (resizing?.value?.width ?? 0) + coreEvent.deltaX
-      // eslint-disable-next-line
-      // @ts-ignore
       newSize.height = (resizing?.value?.height ?? 0) + coreEvent.deltaY
 
       resizing.value = newSize
@@ -400,7 +377,7 @@ const handleResize = (event: any): void => {
         h: inner.value.h,
         w: inner.value.w,
         x: inner.value.x,
-        y: inner.value.y
+        y: inner.value.y,
       })
 
       newSize.width = width
@@ -414,33 +391,39 @@ const handleResize = (event: any): void => {
 
   const pos = calcWH(newSize.height, newSize.width)
 
-  if (pos.w < props.minW) pos.w = props.minW
-  if (pos.w > props.maxW) pos.w = props.maxW
-  if (pos.h < props.minH) pos.h = props.minH
-  if (pos.h > props.maxH) pos.h = props.maxH
-  if (pos.h < 1) pos.h = 1
-  if (pos.w < 1) pos.w = 1
+  if (pos.w < props.minW)
+    pos.w = props.minW
+  if (pos.w > props.maxW)
+    pos.w = props.maxW
+  if (pos.h < props.minH)
+    pos.h = props.minH
+  if (pos.h > props.maxH)
+    pos.h = props.maxH
+  if (pos.h < 1)
+    pos.h = 1
+  if (pos.w < 1)
+    pos.w = 1
 
   lastInner.value.x = x
   lastInner.value.h = y
 
   if (inner.value.w !== pos.w || inner.value.h !== pos.h) {
-    emit('noc-resize', {
+    emit('nocResize', {
       h: pos.h,
       height: newSize.height,
       id: props.id,
       w: pos.w,
-      width: newSize.width
+      width: newSize.width,
     })
   }
 
   if (event.type === 'resizeend' && (previousInner.value.w !== inner.value.w || previousInner.value.h !== inner.value.h)) {
-    emit('noc-resize-end', {
+    emit('nocResizeEnd', {
       h: pos.h,
       height: newSize.height,
       id: props.id,
       w: pos.w,
-      width: newSize.width
+      width: newSize.width,
     })
   }
 
@@ -451,33 +434,32 @@ const handleResize = (event: any): void => {
     id: props.id,
     w: pos.w,
     x: inner.value.x,
-    y: inner.value.y
+    y: inner.value.y,
   })
 }
-const tryMakeDraggable = (): void => {
-  if (!interactObj.value && item.value) {
+function tryMakeDraggable(): void {
+  if (!interactObj.value && item.value)
     interactObj.value = interact(item.value)
-  }
 
   if (props.isDraggable && !props.isStatic) {
     interactObj.value.draggable({
       allowFrom: props.dragAllowFrom,
       ignoreFrom: props.dragIgnoreFrom,
-      ...props.dragOption
+      ...props.dragOption,
     })
 
     if (!dragEventSet.value) {
       dragEventSet.value = true
       interactObj.value.on('dragstart dragmove dragend', handleDrag)
     }
-  } else {
+  }
+  else {
     interactObj.value.draggable({ enabled: false })
   }
 }
-const tryMakeResizable = (): void => {
-  if (!interactObj.value && item.value) {
+function tryMakeResizable(): void {
+  if (!interactObj.value && item.value)
     interactObj.value = interact(item.value)
-  }
 
   if (props.isResizable && !props.isStatic) {
     const selector = `.${stringReplacer(RESIZABLE_HANDLE_CLASS, ' ', '.')}`
@@ -485,48 +467,41 @@ const tryMakeResizable = (): void => {
       h: props.maxH,
       w: props.maxW,
       x: 0,
-      y: 0
+      y: 0,
     })
     const minimum = calcPosition({
       h: props.minH,
       w: props.minW,
       x: 0,
-      y: 0
+      y: 0,
     })
     const opts = {
       edges: { bottom: selector, left: false, right: selector, top: false },
       ignoreFrom: 'a, button',
       restrictSize: {
         max: { height: maximum.height, width: maximum.width },
-        min: { height: minimum.height, width: minimum.width }
-      }
+        min: { height: minimum.height, width: minimum.width },
+      },
     }
 
-    // eslint-disable-next-line
-    // @ts-ignore
     interactObj.value.resizable(opts)
 
     if (!resizeEventSet.value) {
       resizeEventSet.value = true
       interactObj.value.on('resizestart resizemove resizeend', handleResize)
     }
-  } else {
-    // eslint-disable-next-line
-    // @ts-ignore
+  }
+  else {
     interactObj.value.resizable({ enabled: false })
   }
 }
 
 onBeforeUnmount(() => {
-  if (interactObj.value) {
-    // eslint-disable-next-line
-    // @ts-ignore
+  if (interactObj.value)
     interactObj.value.unset()
-  }
 
-  if (props.observer && item.value !== null) {
+  if (props.observer && item.value !== null)
     props.observer.unobserve(item.value)
-  }
 })
 onMounted(() => {
   tryMakeResizable()
@@ -534,6 +509,23 @@ onMounted(() => {
   createStyle()
 })
 </script>
+
+<template>
+  <div
+    ref="item"
+    class="vue-grid-item"
+    :class="cssClasses"
+    :style="style.props"
+  >
+    <slot />
+    <div
+      v-if="isResizableAndNotStatic"
+      :class="RESIZABLE_HANDLE_CLASS"
+    >
+      <div class="corner-handle" />
+    </div>
+  </div>
+</template>
 
 <style lang="scss">
   .vue-grid-item {
@@ -582,7 +574,6 @@ onMounted(() => {
       width: 1rem;
       height: 1rem;
       cursor: se-resize;
-
 
       &:hover .corner-handle { opacity: 1 }
       &:active .corner-handle { transform: scale(120%); }

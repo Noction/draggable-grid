@@ -2,110 +2,106 @@
 [![NPM package](https://img.shields.io/npm/v/@noction/vue-draggable-grid.svg?style=flat-square)](https://www.npmjs.com/package/@noction/vue-draggable-grid)
 [![NPM monthly downloads](https://img.shields.io/npm/dm/@noction/vue-draggable-grid.svg?style=flat)](https://npmjs.com/package/@noction/vue-draggable-grid)
 [![codecov](https://codecov.io/gh/Noction/vue-draggable-grid/branch/main/graph/badge.svg?token=C5NGW1BC2N)](https://codecov.io/gh/Noction/vue-draggable-grid)
+[![code style](https://antfu.me/badge-code-style.svg)](https://github.com/antfu/eslint-config)
 
 Grid layout for vue 3 with draggable, resize, responsive events
 
 Rewrote to TypeScript, Composition API and migrated to Vue3
 
-
 ### Usage
 ```js
-  import { createApp } from 'vue'
-  import App from './App.vue'
-  import VueDraggableGrid from '@noction/vue-draggable-grid'
-  import '@noction/vue-draggable-grid/styles'
+import { createApp } from 'vue'
+import VueDraggableGrid from '@noction/vue-draggable-grid'
+import App from './App.vue'
+import '@noction/vue-draggable-grid/styles'
 
-  const app = createApp(App)
+const app = createApp(App)
 
-  app.use(VueDraggableGrid)
+app.use(VueDraggableGrid)
 
-  app.mount('#app')
+app.mount('#app')
 ```
 ```vue
-  <template>
-    <grid-layout
-      v-model:layout="layout"
-      :col-num="12"
-      :row-height="30"
-      @noc-resize="handleResize"
-      @noc-move="handleMove"
-      @noc-move-end="handleMoveEnd"
-    >
-      <template #item="{ item }">
-        {{ item.id }}
-      </template>
-    </grid-layout>
-  </template>
-  <script>
-    export default {
-      name: 'App',
-      data () {
-        return {
-          layout: [
-            { x: 0, y: 0, w: 2, h: 2, id: 0 },
-            { x: 2, y: 0, w: 2, h: 4, id: 1 },
-            { x: 4, y: 0, w: 2, h: 5, id: 2 },
-            { x: 6, y: 0, w: 2, h: 3, id: 3 },
-            { x: 8, y: 0, w: 2, h: 3, id: 4 },
-            { x: 8, y: 0, w: 2, h: 3, id: 5 },
-            { x: 0, y: 5, w: 2, h: 5, id: 6 },
-            { x: 2, y: 5, w: 2, h: 5, id: 7 },
-            { x: 4, y: 5, w: 2, h: 5, id: 8 },
-            { x: 6, y: 3, w: 2, h: 4, id: 9 }
-          ]
-        }
-      }
-    }
-  </script>
+<script setup lang="ts">
+import { ref } from 'vue'
+
+const layout = ref([
+  { h: 2, id: 0, w: 2, x: 0, y: 0 },
+  { h: 2, id: 1, w: 2, x: 2, y: 0 },
+  { h: 2, id: 2, w: 2, x: 4, y: 0 },
+  { h: 2, id: 3, w: 2, x: 0, y: 2 },
+  { h: 2, id: 4, w: 2, x: 2, y: 2 },
+  { h: 2, id: 5, w: 2, x: 4, y: 2 },
+  { h: 2, id: 6, w: 2, x: 0, y: 4 },
+  { h: 2, id: 7, w: 2, x: 2, y: 4 },
+  { h: 2, id: 8, w: 2, x: 4, y: 4 },
+  { h: 2, id: 9, w: 2, x: 0, y: 6 },
+  { h: 2, id: 10, w: 2, x: 2, y: 6 },
+  { h: 2, id: 11, w: 2, x: 4, y: 6 }
+])
+</script>
+
+<template>
+  <grid-layout
+    v-model:layout="layout"
+    :col-num="12"
+    :row-height="30"
+    @noc-resize="handleResize"
+    @noc-move="handleMove"
+    @noc-move-end="handleMoveEnd"
+  >
+    <template #item="{ item }">
+      {{ item.id }}
+    </template>
+  </grid-layout>
+</template>
 ```
 or
 ```vue
-  <template>
-    <grid-layout
-            v-model:layout="layout"
-            :col-num="12"
-            :row-height="30"
-    >
-      <template #default="{ gridItemProps }">
-        <grid-item
-          v-for="item in layout"
-          :key="item.id"
-          v-bind="gridItemProps"
-          :x="item.x"
-          :y="item.y"
-          :w="item.w"
-          :h="item.h"
-          :id="item.id"
-          @noc-resize="handleResize"
-          @noc-move="handleMove"
-          @noc-move-end="handleMoveEnd"
-        >
-          {{ item.id }}
-        </grid-item>
-      </template>
-    </grid-layout>
-  </template>
-  <script>
-  export default {
-    name: 'App',
-    data () {
-      return {
-        layout: [
-          { x: 0, y: 0, w: 2, h: 2, id: 0 },
-          { x: 2, y: 0, w: 2, h: 4, id: 1 },
-          { x: 4, y: 0, w: 2, h: 5, id: 2 },
-          { x: 6, y: 0, w: 2, h: 3, id: 3 },
-          { x: 8, y: 0, w: 2, h: 3, id: 4 },
-          { x: 8, y: 0, w: 2, h: 3, id: 5 },
-          { x: 0, y: 5, w: 2, h: 5, id: 6 },
-          { x: 2, y: 5, w: 2, h: 5, id: 7 },
-          { x: 4, y: 5, w: 2, h: 5, id: 8 },
-          { x: 6, y: 3, w: 2, h: 4, id: 9 }
-        ]
-      }
-    }
-  }
-  </script>
+<script setup>
+import { ref } from 'vue'
+
+const layout = ref([
+  { h: 2, id: 0, w: 2, x: 0, y: 0 },
+  { h: 2, id: 1, w: 2, x: 2, y: 0 },
+  { h: 2, id: 2, w: 2, x: 4, y: 0 },
+  { h: 2, id: 3, w: 2, x: 0, y: 2 },
+  { h: 2, id: 4, w: 2, x: 2, y: 2 },
+  { h: 2, id: 5, w: 2, x: 4, y: 2 },
+  { h: 2, id: 6, w: 2, x: 0, y: 4 },
+  { h: 2, id: 7, w: 2, x: 2, y: 4 },
+  { h: 2, id: 8, w: 2, x: 4, y: 4 },
+  { h: 2, id: 9, w: 2, x: 0, y: 6 },
+  { h: 2, id: 10, w: 2, x: 2, y: 6 },
+  { h: 2, id: 11, w: 2, x: 4, y: 6 }
+])
+</script>
+
+<template>
+  <grid-layout
+    v-model:layout="layout"
+    :col-num="12"
+    :row-height="30"
+  >
+    <template #default="{ gridItemProps }">
+      <grid-item
+        v-for="item in layout"
+        v-bind="gridItemProps"
+        :id="item.id"
+        :key="item.id"
+        :x="item.x"
+        :y="item.y"
+        :w="item.w"
+        :h="item.h"
+        @noc-resize="handleResize"
+        @noc-move="handleMove"
+        @noc-move-end="handleMoveEnd"
+      >
+        {{ item.id }}
+      </grid-item>
+    </template>
+  </grid-layout>
+</template>
 ```
 
 ### Props
@@ -134,7 +130,6 @@ _Properties with no default values are **Required**_
 | useCssTransforms               | `boolean`                    | `true`                                               | Use CSS transforms for positioning.             |
 | useObserver                    | `boolean`                    | `false`                                              | Use Intersection Observer for item visibility.  |
 | verticalCompact                | `boolean`                    | `true`                                               | Enable vertical compacting of items.            |
-
 
 #### GridItem Props
 
@@ -208,4 +203,3 @@ _`v-model`'s are not prefixed with `noc`_
 | noc-resize-end       | `payload: ResizePayload`      | Notify when a grid item's resize operation ends.  |
 | noc-move             | `payload: MovePayload`        | Notify when a grid item is being moved.           |
 | noc-move-end         | `payload: MovePayload`        | Notify when a grid item's move operation ends.    |
-

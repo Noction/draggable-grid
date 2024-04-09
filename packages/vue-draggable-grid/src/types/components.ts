@@ -1,4 +1,4 @@
-import { INTERSECTION_OBSERVER_ID } from '@/constants'
+import type { INTERSECTION_OBSERVER_ID } from '@/constants'
 
 export type Dimension = 'h' | 'w' | 'x' | 'y'
 
@@ -23,10 +23,10 @@ export interface GridItemPosition {
 export type GridLayoutEvent<TEventType extends string = string> =
   & Dimensions
   & {
-  eventType: TEventType
-  id: Id
-  callback: () => void
-}
+    eventType: TEventType
+    id: Id
+    callback: () => void
+  }
 
 export type HTMLDivElementWithId = HTMLDivElement & Record<typeof INTERSECTION_OBSERVER_ID, string | number>
 

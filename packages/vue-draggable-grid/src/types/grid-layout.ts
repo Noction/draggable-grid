@@ -5,16 +5,17 @@ import type {
   HandleDragEventArgs,
   HandleResizeEventArgs,
   Id,
-  IntersectionObserverConfig
+  IntersectionObserverConfig,
 } from '@/types/components'
 
 type LayoutEventKey =
-  | 'noc-layout-before-mount'
-  | 'noc-layout-create'
-  | 'noc-layout-mount'
-  | 'noc-layout-ready'
-  | 'noc-layout-update'
+  | 'nocLayoutBeforeMount'
+  | 'nocLayoutCreate'
+  | 'nocLayoutMount'
+  | 'nocLayoutReady'
+  | 'nocLayoutUpdate'
 
+// eslint-disable-next-line ts/consistent-type-definitions -- it needs to be type instead of interface
 type VModelEvents = {
   'update:layout': [layout: Layout]
   'update:breakpoints': [breakpoints: BreakpointsKeys]
@@ -29,19 +30,19 @@ export type CompleteMargins = [number, number]
 export type GridItemPlaceholder = Dimensions & Record<'id', Id>
 
 export type GridLayoutEvents =
-  & Pick<GridItemEvents, 'noc-resize-container'>
+  & Pick<GridItemEvents, 'nocResizeContainer'> // Already in camelCase
   & LayoutEvents
   & VModelEvents
   & {
-    'noc-intersection-observe': [id: Id[]]
-    'noc-intersection-unobserve': [id: Id[]]
-    'noc-item-move': GridItemEvents['noc-move']
-    'noc-item-move-end': GridItemEvents['noc-move-end']
-    'noc-item-resize': GridItemEvents['noc-resize']
-    'noc-item-resize-end': GridItemEvents['noc-resize-end']
-}
+    nocIntersectionObserve: [id: Id[]]
+    nocIntersectionUnobserve: [id: Id[]]
+    nocItemMove: GridItemEvents['nocMove']
+    nocItemMoveEnd: GridItemEvents['nocMoveEnd']
+    nocItemResize: GridItemEvents['nocResize']
+    nocItemResizeEnd: GridItemEvents['nocResizeEnd']
+  }
 
-export type GridLayoutProps = {
+export interface GridLayoutProps {
   colNum: number
   layout: Layout
 
@@ -54,7 +55,7 @@ export type GridLayoutProps = {
   isResizable?: boolean
   margin?: Margin
   maxRows?: number
-  preventCollision?: boolean,
+  preventCollision?: boolean
   responsive?: boolean
   responsiveLayouts?: ResponsiveLayout
   rowHeight?: number
@@ -63,7 +64,7 @@ export type GridLayoutProps = {
   verticalCompact?: boolean
 }
 
-export type GridProvidedValues = {
+export interface GridProvidedValues {
   handleDragEvent: (args: HandleDragEventArgs) => void
   handleResizeEvent: (args: HandleResizeEventArgs) => void
 }

@@ -1,57 +1,5 @@
-<template>
-  <div>
-    <div
-      ref="wrapper"
-      class="vue-grid-layout"
-      :style="mergedStyle"
-    >
-      <grid-item
-        v-show="isDragging"
-        class="vue-grid-placeholder"
-        v-bind="{ ...gridItemProps, ...placeholder }"
-      />
-      <slot :grid-item-props="{ ...gridItemProps, observer }">
-        <grid-item
-          v-for="layoutItem in layout"
-          :key="layoutItem.id"
-          v-bind="{ ...gridItemProps, ...layoutItemOptional(layoutItem) }"
-          :observer="observer"
-          @noc-resize-container="emit('noc-resize-container', $event)"
-          @noc-resize-end="emit('noc-item-resize-end', $event)"
-          @noc-resize="emit('noc-item-resize', $event)"
-          @noc-move="emit('noc-item-move', $event)"
-          @noc-move-end="emit('noc-item-move-end', $event)"
-        >
-          <slot
-            name="gridItemContent"
-            :item="layoutItem"
-          />
-        </grid-item>
-      </slot>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import GridItem from '@/components/GridItem.vue'
 import elementResizeDetectorMaker from 'element-resize-detector'
-import {
-  BreakpointsKeys,
-  Layout, LayoutItemRequired,
-  RecordBreakpoint
-} from '@/types/helpers'
-import { GRID_PROVIDER_INJECTION_KEY, INTERSECTION_OBSERVER_ID } from '@/constants'
-import { GridItemPlaceholder, GridLayoutEvents, GridLayoutProps } from '@/types/grid-layout'
-import { HandleDragEventArgs, HandleResizeEventArgs, Id } from '@/types/components'
-import { addWindowEventListener, removeWindowEventListener } from '@/helpers/DOM'
-import {
-  bottom,
-  cloneLayout,
-  compact,
-  getAllCollisions,
-  getLayoutItem,
-  moveElement, normalizeMargins
-} from '@/helpers/utils'
 import {
   computed,
   defineEmits,
@@ -62,14 +10,35 @@ import {
   onMounted,
   provide,
   ref,
-  watch
+  watch,
 } from 'vue'
+import GridItem from '@/components/GridItem.vue'
+import type {
+  BreakpointsKeys,
+  Layout,
+  LayoutItemRequired,
+  RecordBreakpoint,
+} from '@/types/helpers'
+import { GRID_PROVIDER_INJECTION_KEY, INTERSECTION_OBSERVER_ID } from '@/constants'
+import type { GridItemPlaceholder, GridLayoutEvents, GridLayoutProps } from '@/types/grid-layout'
+import type { HandleDragEventArgs, HandleResizeEventArgs, Id } from '@/types/components'
+import { addWindowEventListener, removeWindowEventListener } from '@/helpers/DOM'
+import {
+  bottom,
+  cloneLayout,
+  compact,
+  getAllCollisions,
+  getLayoutItem,
+  moveElement,
+  normalizeMargins,
+} from '@/helpers/utils'
 import {
   findOrGenerateResponsiveLayout,
   getBreakpointFromWidth,
-  getColsFromBreakpoint
+  getColsFromBreakpoint,
 } from '@/helpers/responsiveUtils'
 
+/* eslint perfectionist/sort-objects: "error" */
 const props = withDefaults(
   defineProps<GridLayoutProps>(),
   {
@@ -81,15 +50,16 @@ const props = withDefaults(
     isDraggable: true,
     isResizable: true,
     margin: () => ([10]),
-    maxRows: Infinity,
+    maxRows: Number.POSITIVE_INFINITY,
     preventCollision: false,
     responsive: false,
     responsiveLayouts: () => ({}),
     rowHeight: 150,
     useCssTransforms: true,
     useObserver: false,
-    verticalCompact: true
-  })
+    verticalCompact: true,
+  },
+)
 
 const emit = defineEmits<GridLayoutEvents>()
 
@@ -108,7 +78,7 @@ const layoutItemOptionalKeys = [
   'resizeIgnoreFrom',
   'preserveAspectRatio',
   'dragOption',
-  'resizeOption'
+  'resizeOption',
 ]
 
 const layoutItemRequired = { h: 0, id: -1, w: 0, x: 0, y: 0 } as const
@@ -146,10 +116,10 @@ const gridItemProps = computed(() => ({
   responsive: props.responsive,
   rowHeight: props.rowHeight,
   useCssTransforms: props.useCssTransforms,
-  width: width.value
+  width: width.value,
 }))
 
-watch(() => props.colNum, value => {
+watch(() => props.colNum, (value) => {
   columnsNumber.value = value
 })
 
@@ -164,7 +134,7 @@ watch(() => props.margin, () => {
 watch(() => props.layout, () => {
   updateHeight()
 })
-watch(() => props.responsive, value => {
+watch(() => props.responsive, (value) => {
   if (!value) {
     emit('update:layout', originalLayout.value)
     columnsNumber.value = props.colNum
@@ -173,19 +143,19 @@ watch(() => props.responsive, value => {
 })
 watch(() => width.value, (_, oldValue) => {
   nextTick(() => {
-
     if (oldValue === 0) {
       nextTick(() => {
-        emit('noc-layout-ready', props.layout)
+        emit('nocLayoutReady', props.layout)
       })
     }
 
-    if (props.responsive) responsiveGridLayout()
+    if (props.responsive)
+      responsiveGridLayout()
 
     updateHeight()
   })
 })
-watch(() => props.useObserver, value => {
+watch(() => props.useObserver, (value) => {
   if (!value) {
     observer.disconnect()
     return
@@ -193,71 +163,60 @@ watch(() => props.useObserver, value => {
 
   createObserver()
 })
-// eslint-disable-next-line
-// @ts-ignore
-const observerCallback = entries => {
-  const observerItems = {
-    observe: <Id[]>[],
-    unobserve: <Id[]>[]
+
+// @ts-expect-error ToDo: Should improve the types
+function observerCallback(entries) {
+  interface ObserverItems {
+    observe: Id[]
+    unobserve: Id[]
   }
 
-  // eslint-disable-next-line
-  // @ts-ignore
-  entries.forEach(({ target, isIntersecting }) => {
+  const observerItems: ObserverItems = {
+    observe: [],
+    unobserve: [],
+  }
 
+  // @ts-expect-error ToDo: Should improve the types
+  entries.forEach(({ isIntersecting, target }) => {
     if (isIntersecting) {
-      // eslint-disable-next-line
-      // @ts-ignore
       observerItems.observe.push(target[INTERSECTION_OBSERVER_ID])
       return
     }
 
-    // eslint-disable-next-line
-    // @ts-ignore
     observerItems.unobserve.push(target[INTERSECTION_OBSERVER_ID])
   })
 
-  emit('noc-intersection-observe', observerItems.observe)
-  emit('noc-intersection-unobserve', observerItems.unobserve)
+  emit('nocIntersectionObserve', observerItems.observe)
+  emit('nocIntersectionUnobserve', observerItems.unobserve)
 }
 
-// eslint-disable-next-line
-const layoutItemOptional = (props: { [key: string]: any }): LayoutItemRequired => {
+function layoutItemOptional(props: { [key: string]: any }): LayoutItemRequired {
   const requiredKeys = Object.keys(layoutItemRequired)
 
-  // eslint-disable-next-line
-  // @ts-ignore
+  // @ts-expect-error ToDo: Should improve the types
   return Object
     .keys(props)
     .reduce((acc, val) => {
-      // eslint-disable-next-line
-      // @ts-ignore
       if (layoutItemOptionalKeys.includes(val) || requiredKeys.includes(val)) {
-        // eslint-disable-next-line
-        // @ts-ignore
+        // @ts-expect-error ToDo: Should improve the types
         acc[val] = props[val]
       }
       return acc
     }, {})
 }
 
-const layoutUpdate = (): void => {
+function layoutUpdate(): void {
   if (props.layout && originalLayout.value) {
     if (props.layout.length !== originalLayout.value.length) {
-      // eslint-disable-next-line
-      // @ts-ignore
       const diff = findDifference(props.layout, originalLayout.value)
 
       if (diff.length > 0) {
         if (props.layout.length > originalLayout.value.length) {
-          // eslint-disable-next-line
-          // @ts-ignore
           originalLayout.value = originalLayout.value.concat(diff)
-        } else {
-          // eslint-disable-next-line
-          // @ts-ignore
-          originalLayout.value = originalLayout.value.filter(obj => {
-            return !diff.some(obj2 => {
+        }
+        else {
+          originalLayout.value = originalLayout.value.filter((obj) => {
+            return !diff.some((obj2) => {
               return obj.id === obj2.id
             })
           })
@@ -272,90 +231,74 @@ const layoutUpdate = (): void => {
 
     updateHeight()
 
-    emit('noc-layout-update', props.layout)
+    emit('nocLayoutUpdate', props.layout)
     calculateStylesTrigger.value = !calculateStylesTrigger.value
   }
 }
-const findDifference = (layout: Layout, originalLayout: Layout): Layout => {
+function findDifference(layout: Layout, originalLayout: Layout): Layout {
   const uniqueResultOne = layout.filter(l => !originalLayout.some(ol => l.id === ol.id))
   const uniqueResultTwo = originalLayout.filter(ol => !layout.some(l => ol.id === l.id))
 
   return uniqueResultOne.concat(uniqueResultTwo)
 }
-const initResponsiveFeatures = (): void => {
-  // eslint-disable-next-line
-  // @ts-ignore
+function initResponsiveFeatures(): void {
   layouts.value = Object.assign({}, props.responsiveLayouts)
 }
-const updateHeight = (): void => {
+function updateHeight(): void {
   const height = containerHeight()
 
   mergedStyle.value = { height }
 }
-const containerHeight = (): string | undefined => {
-  if (!props.autoSize || !props.layout) return
+function containerHeight(): string | undefined {
+  if (!props.autoSize || !props.layout)
+    return
 
   const [, marginX] = normalizeMargins(props.margin)
 
   return `${bottom(props.layout) * (props.rowHeight + marginX) + marginX}px`
-
 }
-const onWindowResize = (): void => {
-  if (wrapper.value) {
-    // eslint-disable-next-line
-    // @ts-ignore
+function onWindowResize(): void {
+  if (wrapper.value)
     width.value = wrapper.value.offsetWidth
-  }
 }
-const responsiveGridLayout = (): void => {
+
+function responsiveGridLayout(): void {
   const newBreakpoint = getBreakpointFromWidth(props.breakpoints, width.value)
   const newCols = getColsFromBreakpoint(newBreakpoint, props.cols)
 
-  if (lastBreakpoint.value && !layouts.value[lastBreakpoint.value]) {
-    // eslint-disable-next-line
-    // @ts-ignore
+  if (lastBreakpoint.value && !layouts.value[lastBreakpoint.value])
     layouts.value[lastBreakpoint.value] = cloneLayout(props.layout)
-  }
 
-  // eslint-disable-next-line
-  // @ts-ignore
   const layout = findOrGenerateResponsiveLayout(
     originalLayout.value,
     layouts.value,
     props.breakpoints,
     newBreakpoint,
     lastBreakpoint.value,
-    // eslint-disable-next-line
-    // @ts-ignore
     newCols,
-    props.verticalCompact
+    props.verticalCompact,
   )
 
-  // eslint-disable-next-line
-  // @ts-ignore
   layouts.value[newBreakpoint] = layout
 
-  if (lastBreakpoint.value !== newBreakpoint) {
+  if (lastBreakpoint.value !== newBreakpoint)
     emit('update:breakpoints', newBreakpoint)
-  }
 
   lastBreakpoint.value = newBreakpoint
 
   emit('update:layout', layout)
   columnsNumber.value = getColsFromBreakpoint(newBreakpoint, props.cols)
 }
-const onCreated = () => {
-  emit('noc-layout-create', props.layout)
+function onCreated() {
+  emit('nocLayoutCreate', props.layout)
 }
 
-const createObserver = () => {
-  // eslint-disable-next-line
-  // @ts-ignore
+function createObserver() {
   observer = new IntersectionObserver(observerCallback, {
     root: null,
     rootMargin: '8px',
     threshold: 0.40,
-    ...props.intersectionObserverConfig
+    ...props.intersectionObserverConfig,
   })
 }
 
@@ -364,16 +307,15 @@ onCreated()
 onBeforeUnmount(() => {
   removeWindowEventListener('resize', onWindowResize)
 
-  if (erd.value && wrapper.value) {
+  if (erd.value && wrapper.value)
     erd.value.uninstall(wrapper.value)
-  }
 })
 onBeforeMount(() => {
-  emit('noc-layout-before-mount', props.layout)
+  emit('nocLayoutBeforeMount', props.layout)
 })
 
 onMounted(() => {
-  emit('noc-layout-mount', props.layout)
+  emit('nocLayoutMount', props.layout)
   nextTick(() => {
     originalLayout.value = props.layout
 
@@ -384,21 +326,19 @@ onMounted(() => {
       addWindowEventListener('resize', onWindowResize.bind(this))
       compact(props.layout, props.verticalCompact)
 
-      emit('noc-layout-update', props.layout)
+      emit('nocLayoutUpdate', props.layout)
       updateHeight()
 
-      if (wrapper.value) {
+      if (wrapper.value)
         erd.value.listenTo(wrapper.value, onWindowResize)
-      }
 
-      if (props.useObserver) {
+      if (props.useObserver)
         createObserver()
-      }
     })
   })
 })
 
-function handleDragEvent ({ eventType, id, x, y, h, w, callback }: HandleDragEventArgs): void {
+function handleDragEvent({ callback, eventType, h, id, w, x, y }: HandleDragEventArgs): void {
   const layoutItem = getLayoutItem(props.layout, id)
   const l = layoutItem ?? { ...layoutItemRequired }
 
@@ -411,7 +351,8 @@ function handleDragEvent ({ eventType, id, x, y, h, w, callback }: HandleDragEve
     nextTick(() => {
       isDragging.value = true
     })
-  } else {
+  }
+  else {
     nextTick(() => {
       isDragging.value = false
     })
@@ -427,11 +368,11 @@ function handleDragEvent ({ eventType, id, x, y, h, w, callback }: HandleDragEve
 
   if (eventType === 'dragend') {
     compact(props.layout, props.verticalCompact)
-    emit('noc-layout-update', props.layout)
+    emit('nocLayoutUpdate', props.layout)
   }
 }
 
-function handleResizeEvent ({ eventType, id, x, y, h, w, callback }: HandleResizeEventArgs): void {
+function handleResizeEvent({ callback, eventType, h, id, w, x, y }: HandleResizeEventArgs): void {
   const layoutItem = getLayoutItem(props.layout, id)
   const l = layoutItem ?? { ...layoutItemRequired }
 
@@ -439,23 +380,28 @@ function handleResizeEvent ({ eventType, id, x, y, h, w, callback }: HandleResiz
 
   if (props.preventCollision) {
     const collisions = getAllCollisions(props.layout, { ...l, h, w }).filter(
-      layoutItem => layoutItem.id !== l.id
+      layoutItem => layoutItem.id !== l.id,
     )
 
     hasCollisions = collisions.length > 0
 
     if (hasCollisions) {
-      let leastX = Infinity, leastY = Infinity
+      let leastX = Number.POSITIVE_INFINITY
+      let leastY = Number.POSITIVE_INFINITY
 
-      collisions.forEach(layoutItem => {
-        if (layoutItem.x > l.x) leastX = Math.min(leastX, layoutItem.x)
+      collisions.forEach((layoutItem) => {
+        if (layoutItem.x > l.x)
+          leastX = Math.min(leastX, layoutItem.x)
 
-        if (layoutItem.y > l.y) leastY = Math.min(leastY, layoutItem.y)
+        if (layoutItem.y > l.y)
+          leastY = Math.min(leastY, layoutItem.y)
       })
 
-      if (Number.isFinite(leastX)) l.w = leastX - l.x
+      if (Number.isFinite(leastX))
+        l.w = leastX - l.x
 
-      if (Number.isFinite(leastY)) l.h = leastY - l.y
+      if (Number.isFinite(leastY))
+        l.h = leastY - l.y
     }
   }
 
@@ -474,8 +420,8 @@ function handleResizeEvent ({ eventType, id, x, y, h, w, callback }: HandleResiz
     nextTick(() => {
       isDragging.value = true
     })
-
-  } else {
+  }
+  else {
     nextTick(() => {
       isDragging.value = false
     })
@@ -489,16 +435,49 @@ function handleResizeEvent ({ eventType, id, x, y, h, w, callback }: HandleResiz
 
   updateHeight()
 
-  if (eventType === 'resizeend') {
-    emit('noc-layout-update', props.layout)
-  }
+  if (eventType === 'resizeend')
+    emit('nocLayoutUpdate', props.layout)
 }
 
 provide(GRID_PROVIDER_INJECTION_KEY, {
   handleDragEvent,
-  handleResizeEvent
+  handleResizeEvent,
 })
 </script>
+
+<template>
+  <div>
+    <div
+      ref="wrapper"
+      class="vue-grid-layout"
+      :style="mergedStyle"
+    >
+      <GridItem
+        v-show="isDragging"
+        class="vue-grid-placeholder"
+        v-bind="{ ...gridItemProps, ...placeholder }"
+      />
+      <slot :grid-item-props="{ ...gridItemProps, observer }">
+        <GridItem
+          v-for="layoutItem in layout"
+          :key="layoutItem.id"
+          v-bind="{ ...gridItemProps, ...layoutItemOptional(layoutItem) }"
+          :observer="observer"
+          @noc-resize-container="emit('nocResizeContainer', $event)"
+          @noc-resize-end="emit('nocItemResizeEnd', $event)"
+          @noc-resize="emit('nocItemResize', $event)"
+          @noc-move="emit('nocItemMove', $event)"
+          @noc-move-end="emit('nocItemMoveEnd', $event)"
+        >
+          <slot
+            name="gridItemContent"
+            :item="layoutItem"
+          />
+        </GridItem>
+      </slot>
+    </div>
+  </div>
+</template>
 
 <style>
   .vue-grid-layout {

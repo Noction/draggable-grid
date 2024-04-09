@@ -17,7 +17,6 @@ To set the repository up:
 | 3. Install [`@antfu/ni`](https://github.com/antfu/ni)                                                    | `npm i -g @antfu/ni` |
 | 4. Install dependencies under the project root                                                           | `ni`                 |
 
-
 ## 💡 Commands
 
 ### `nr dev`
@@ -92,7 +91,6 @@ fix #123
 This will let GitHub know the issues are linked, and automatically close them once the PR gets merged. Learn more at [the guide](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword).
 
 It's ok to have multiple commits in a single PR, you don't need to rebase or force push for your changes as we will use `Squash and Merge` to squash the commits into one commit when merging.
-
 
 ### Update Dependencies
 

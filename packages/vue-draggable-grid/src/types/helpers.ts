@@ -1,4 +1,4 @@
-import { Id } from './components'
+import type { Id } from './components'
 
 export type Breakpoints = RecordBreakpoint<number>
 
@@ -8,7 +8,7 @@ export type Layout = LayoutItem[]
 
 export type LayoutItem = LayoutItemRequired & LayoutItemOptional
 
-export type LayoutItemOptional = {
+export interface LayoutItemOptional {
   minW?: number
   minH?: number
   maxW?: number
@@ -19,7 +19,7 @@ export type LayoutItemOptional = {
   isResizable?: boolean
 }
 
-export type LayoutItemRequired = { w: number, h: number, x: number, y: number, id: Id }
+export interface LayoutItemRequired { w: number, h: number, x: number, y: number, id: Id }
 
 export type MovingDirection = keyof typeof MovingDirections
 

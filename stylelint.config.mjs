@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   extends: [
     'stylelint-config-standard-scss', // configure for SCSS
     'stylelint-config-recommended-vue', // add overrides for .Vue files
@@ -18,6 +18,6 @@ module.exports = {
     'at-rule-no-unknown': null,
     'scss/at-rule-no-unknown': true,
     'declaration-no-important': true,
-    'selector-pseudo-element-no-unknown': true
-  }
+    'selector-pseudo-element-no-unknown': true,
+  },
 }

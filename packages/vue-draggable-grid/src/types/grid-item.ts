@@ -1,16 +1,18 @@
-import type { Margin } from '@/types/grid-layout'
 import type { Ref } from 'vue'
+import type { Margin } from '@/types/grid-layout'
 import type { Breakpoints, BreakpointsKeys } from '@/types/helpers'
 import type { Dimensions, GridItemPosition, Id } from '@/types/components'
 
+// eslint-disable-next-line ts/consistent-type-definitions -- it needs to be type instead of interface
 export type GridItemEvents = {
-  'noc-resize-container': [payload: ResizePayload]
-  'noc-resize': [payload: ResizePayload]
-  'noc-resize-end': [payload: ResizePayload]
-  'noc-move': [payload: MovePayload]
-  'noc-move-end': [payload: MovePayload]
+  nocResizeContainer: [payload: ResizePayload]
+  nocResize: [payload: ResizePayload]
+  nocResizeEnd: [payload: ResizePayload]
+  nocMove: [payload: MovePayload]
+  nocMoveEnd: [payload: MovePayload]
 }
-export type GridItemProps = {
+
+export interface GridItemProps {
   breakpointCols: Breakpoints
   colNum: number
   containerWidth: number

@@ -1,7 +1,7 @@
 import '@noction/vue-draggable-grid/styles'
-import App from './App.vue'
 import VueDraggableGrid from '@noction/vue-draggable-grid'
 import { createApp } from 'vue'
+import App from './App.vue'
 
 const app = createApp(App)
 

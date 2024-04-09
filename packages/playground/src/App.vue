@@ -1,25 +1,12 @@
-<template>
-  <div class="app-wrap">
-    <nav>
-      <a href="#/">Home</a>
-      <a href="#/responsive">Responsive</a>
-    </nav>
-
-    <div class="page-wrapper">
-      <component :is="currentView" />
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import Home from './pages/Home.vue';
-import Responsive from './pages/Responsive.vue';
-import NotFound from './pages/NotFound.vue';
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
+import Home from './pages/Home.vue'
+import Responsive from './pages/Responsive.vue'
+import NotFound from './pages/NotFound.vue'
 
 const routes = {
   '/': Home,
-  '/responsive': Responsive
+  '/responsive': Responsive,
 }
 
 const currentPath = ref(window.location.hash)
@@ -33,6 +20,19 @@ const currentView = computed(() => {
   return routes[currentPath.value.slice(1) || '/'] || NotFound
 })
 </script>
+
+<template>
+  <div class="app-wrap">
+    <nav>
+      <a href="#/">Home</a>
+      <a href="#/responsive">Responsive</a>
+    </nav>
+
+    <div class="page-wrapper">
+      <component :is="currentView" />
+    </div>
+  </div>
+</template>
 
 <style>
 .vue-grid-item {

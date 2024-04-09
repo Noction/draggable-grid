@@ -1,12 +1,10 @@
-import { Breakpoints, BreakpointsKeys, findOrGenerateResponsiveLayoutFnc } from '../types/helpers'
+import type { Breakpoints, BreakpointsKeys, findOrGenerateResponsiveLayoutFnc } from '../types/helpers'
 import { cloneLayout, compact, correctBounds } from './utils'
 
-// eslint-disable-next-line
-// @ts-ignore
-export const findOrGenerateResponsiveLayout: findOrGenerateResponsiveLayoutFnc = (orgLayout, layouts, breakpoints, breakpoint, lastBreakpoint, cols, verticalCompact)  => {
-  if (Object.prototype.hasOwnProperty.call(layouts, breakpoint)) {
+// @ts-expect-error ToDo: Will be reviewed
+export const findOrGenerateResponsiveLayout: findOrGenerateResponsiveLayoutFnc = (orgLayout, layouts, breakpoints, breakpoint, lastBreakpoint, cols, verticalCompact) => {
+  if (Object.prototype.hasOwnProperty.call(layouts, breakpoint))
     return cloneLayout(layouts[breakpoint] || [])
-  }
 
   let layout = orgLayout
 
@@ -17,8 +15,7 @@ export const findOrGenerateResponsiveLayout: findOrGenerateResponsiveLayoutFnc =
     const b = breakpointsAbove[i]
 
     if (Object.prototype.hasOwnProperty.call(layouts, b)) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      // @ts-expect-error ToDo: Will be reviewed
       layout = layouts[b]
       break
     }
@@ -29,7 +26,7 @@ export const findOrGenerateResponsiveLayout: findOrGenerateResponsiveLayoutFnc =
   return compact(correctBounds(layout, { cols }), verticalCompact)
 }
 
-export const getBreakpointFromWidth = (breakpoints: Breakpoints, width: number): BreakpointsKeys => {
+export function getBreakpointFromWidth(breakpoints: Breakpoints, width: number): BreakpointsKeys {
   const sorted = sortBreakpoints(breakpoints)
 
   let [matching] = sorted
@@ -37,18 +34,18 @@ export const getBreakpointFromWidth = (breakpoints: Breakpoints, width: number):
   for (let i = 1; i < sorted.length; i++) {
     const breakpointName = sorted[i]
 
-    if (width > (breakpoints[breakpointName] ?? 1)) matching = breakpointName
+    if (width > (breakpoints[breakpointName] ?? 1))
+      matching = breakpointName
   }
 
   return matching
 }
 
-export const getColsFromBreakpoint = (breakpoint: BreakpointsKeys, cols: Breakpoints): number => {
+export function getColsFromBreakpoint(breakpoint: BreakpointsKeys, cols: Breakpoints): number {
   return cols[breakpoint]!
 }
 
-export const sortBreakpoints = (breakpoints: Breakpoints): BreakpointsKeys[] => {
-
+export function sortBreakpoints(breakpoints: Breakpoints): BreakpointsKeys[] {
   return (Object.keys(breakpoints) as (keyof typeof breakpoints)[])
     .sort((a, b) => (breakpoints[a] ?? 1) - (breakpoints[b] ?? 1))
 }
