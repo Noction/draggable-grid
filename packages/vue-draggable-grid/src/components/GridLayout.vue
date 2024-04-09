@@ -481,7 +481,7 @@ function handleResizeEvent ({ eventType, id, x, y, h, w, callback }: HandleResiz
     })
   }
 
-  if (props.responsive) responsiveGridLayout()
+  // if (props.responsive) responsiveGridLayout()
 
   compact(props.layout, props.verticalCompact)
 

@@ -6,10 +6,12 @@
     :style="style.props"
   >
     <slot />
-    <span
+    <div
       v-if="isResizableAndNotStatic"
       :class="RESIZABLE_HANDLE_CLASS"
-    />
+    >
+      <div class="corner-handle"/>
+    </div>
   </div>
 </template>
 
@@ -57,7 +59,6 @@ const {
 
 const item = ref<HTMLDivElementWithId | null>(null)
 
-const cols = ref(props.colNum)
 const dragEventSet = ref(false)
 const dragging = ref<{ left?: number; top?: number }>({})
 const inner = ref<Dimensions>({ h: props.h, w: props.w, x: props.x, y: props.y })
@@ -103,51 +104,54 @@ watch(() => props.observer, () => {
   }
 })
 
-watch(() => cols.value, () => {
+watch(() => props.colNum, () => {
   tryMakeResizable()
   emitContainerResized()
 })
+
 watch(() => props.containerWidth, () => {
   tryMakeResizable()
   emitContainerResized()
 })
+
 watch(() => props.h, value => {
   inner.value.h = value
   emitContainerResized()
 })
+
 watch(() => props.isDraggable, () => {
   tryMakeDraggable()
 })
-watch(() => props.isResizable, () => {
+
+watch([
+  () => props.isResizable,
+  () => props.maxH,
+  () => props.maxW,
+  () => props.minH,
+  () => props.minW
+], () => {
   tryMakeResizable()
 })
-watch(() => props.maxH, () => {
-  tryMakeResizable()
-})
-watch(() => props.maxW, () => {
-  tryMakeResizable()
-})
-watch(() => props.minH, () => {
-  tryMakeResizable()
-})
-watch(() => props.minW, () => {
-  tryMakeResizable()
-})
+
 watch(() => props.rowHeight, () => {
   emitContainerResized()
 })
+
 watch(() => props.isStatic, () => {
   tryMakeResizable()
   tryMakeDraggable()
 })
+
 watch(() => props.w, value => {
   inner.value.w = value
   createStyle()
 })
+
 watch(() => props.x, value => {
   inner.value.x = value
   createStyle()
 })
+
 watch(() => props.y, value => {
   inner.value.y = value
   createStyle()
@@ -160,7 +164,7 @@ watch(() => props.calculateStylesTrigger, () => {
 const calcColWidth = (): GridItemPosition['width'] => {
   const [marginY] = normalizeMargins(props.margin)
 
-  return (props.containerWidth - (marginY * (cols.value + 1))) / cols.value
+  return (props.containerWidth - (marginY * (props.colNum + 1))) / props.colNum
 }
 
 const calcPosition = ({ x, y, w, h } : Dimensions): GridItemPosition => {
@@ -189,7 +193,7 @@ const calcWH = (height: GridItemPosition['height'], width: GridItemPosition['wid
 
   return {
     h: Math.max(Math.min(h, props.maxRows - inner.value.y), 0),
-    w: Math.max(Math.min(w, cols.value - inner.value.x), 0)
+    w: Math.max(Math.min(w, props.colNum - inner.value.x), 0)
   }
 }
 
@@ -201,7 +205,7 @@ const calcXY = (top: GridItemPosition['top'], left: GridItemPosition['left']): P
   const y = Math.round((top - marginX) / (props.rowHeight + marginX))
 
   return {
-    x: Math.max(Math.min(x, cols.value - inner.value.w), 0),
+    x: Math.max(Math.min(x, props.colNum - inner.value.w), 0),
     y: Math.max(Math.min(y, props.maxRows - inner.value.h), 0)
   }
 }
@@ -214,9 +218,9 @@ const createStyle = (): void => {
     y: inner.value.y
   })
 
-  if (props.x + props.w > cols.value) {
+  if (props.x + props.w > props.colNum) {
     inner.value.x = 0
-    inner.value.w = (props.w > cols.value) ? cols.value : props.w
+    inner.value.w = (props.w > props.colNum) ? props.colNum : props.w
   } else {
     inner.value.x = props.x
     inner.value.w = props.w
@@ -525,10 +529,6 @@ onBeforeUnmount(() => {
   }
 })
 onMounted(() => {
-  if (props.lastBreakpoint) {
-    cols.value = getColsFromBreakpoint(props.lastBreakpoint, props.breakpointCols)
-  }
-
   tryMakeResizable()
   tryMakeDraggable()
   createStyle()
@@ -576,18 +576,28 @@ onMounted(() => {
       bottom: 0;
       z-index: 20;
       box-sizing: border-box;
-      width: 20px;
-      height: 20px;
-      padding: 0 3px 3px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1rem;
+      height: 1rem;
       cursor: se-resize;
-      background-image: url("../assets/resize.svg");
-      background-repeat: no-repeat;
-      background-position: bottom right;
-      background-origin: content-box;
+
+
+      &:hover .corner-handle { opacity: 1 }
+      &:active .corner-handle { transform: scale(120%); }
+
+      .corner-handle {
+        width: 4px;
+        height: 4px;
+        background-color: gray;
+        border-radius: 999px;
+        opacity: 0.5;
+        transition: .2s;
+        transition-property: opacity, transform;
+      }
     }
 
-    &.disable-user-select {
-      user-select: none;
-    }
+    &.disable-user-select { user-select: none }
   }
 </style>
